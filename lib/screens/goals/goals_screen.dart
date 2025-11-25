@@ -29,7 +29,11 @@ class GoalsScreen extends StatelessWidget {
 
       // Adiciona o menu de navegação compartilhado
       bottomNavigationBar: BottomNavMenu(
+<<<<<<< Updated upstream
         currentIndex: 2, // 2 = índice da tela de metas (ajuste se necessário)
+=======
+        currentIndex: 3,
+>>>>>>> Stashed changes
         primaryColor: primaryBlue,
       ),
 

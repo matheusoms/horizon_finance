@@ -85,7 +85,7 @@ class ProfileScreen extends ConsumerWidget {
         ),
       ),
       bottomNavigationBar: BottomNavMenu(
-        currentIndex: 3,
+        currentIndex: 4,
         primaryColor: primaryBlue,
       ),
     );

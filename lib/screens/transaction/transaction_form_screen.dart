@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:horizon_finance/features/transactions/models/transactions.dart';
 import 'package:horizon_finance/features/transactions/services/transaction_service.dart';
+import 'package:horizon_finance/widgets/bottom_nav_menu.dart';
 
 // Modelo para categorias
 class Category {
@@ -27,17 +28,20 @@ class TransactionFormScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<TransactionFormScreen> createState() => _TransactionFormScreenState();
+  ConsumerState<TransactionFormScreen> createState() =>
+      _TransactionFormScreenState();
 }
 
-class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
+class _TransactionFormScreenState
+    extends ConsumerState<TransactionFormScreen> {
   late TransactionType _type;
   final _formKey = GlobalKey<FormState>();
-  
+
   // Controllers
   final TextEditingController _valueController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
-  
+  final TextEditingController _descriptionController =
+      TextEditingController();
+
   // Estados
   DateTime _selectedDate = DateTime.now();
   int? _selectedCategoryId;
@@ -51,7 +55,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     Category(id: 3, nome: 'Investimentos', tipo: 'RECEITA'),
     Category(id: 4, nome: 'Presentes', tipo: 'RECEITA'),
     Category(id: 5, nome: 'Outras Receitas', tipo: 'RECEITA'),
-    
+
     // DESPESAS
     Category(id: 6, nome: 'Aluguel', tipo: 'DESPESA'),
     Category(id: 7, nome: 'Financiamento', tipo: 'DESPESA'),
@@ -78,7 +82,8 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
 
   // Filtra categorias por tipo
   List<Category> get _currentCategories {
-    final tipoString = _type == TransactionType.receita ? 'RECEITA' : 'DESPESA';
+    final tipoString =
+        _type == TransactionType.receita ? 'RECEITA' : 'DESPESA';
     return _allCategories.where((cat) => cat.tipo == tipoString).toList();
   }
 
@@ -86,7 +91,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   void initState() {
     super.initState();
     _type = widget.initialType;
-    
+
     // Se estiver editando, preenche os campos
     if (widget.isEditing && widget.transaction != null) {
       final t = widget.transaction!;
@@ -94,11 +99,11 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
       _selectedDate = t.data ?? DateTime.now();
       _type = t.tipo;
       _selectedCategoryId = t.categoriaId;
-      
+
       // Formata o valor inicial
-      final formatter = NumberFormat.currency(locale: 'pt_BR', symbol: '');
+      final formatter =
+          NumberFormat.currency(locale: 'pt_BR', symbol: '');
       _valueController.text = formatter.format(t.valor).trim();
-      
     }
   }
 
@@ -112,13 +117,13 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   // Converte o valor formatado para double
   double _parseValue(String text) {
     if (text.isEmpty) return 0.0;
-    
+
     String cleanValue = text
         .replaceAll('R\$', '')
         .replaceAll(' ', '')
-        .replaceAll('.', '') // Remove separador de milhar
-        .replaceAll(',', '.'); // Converte decimal
-    
+        .replaceAll('.', '')
+        .replaceAll(',', '.');
+
     return double.tryParse(cleanValue) ?? 0.0;
   }
 
@@ -129,14 +134,14 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     }
 
     final valor = _parseValue(_valueController.text);
-    final descricao = _descriptionController.text.isEmpty 
+    final descricao = _descriptionController.text.isEmpty
         ? (_type == TransactionType.receita ? 'Receita' : 'Despesa')
         : _descriptionController.text;
 
-    // Busca o nome da categoria
     final categoria = _allCategories.firstWhere(
       (cat) => cat.id == _selectedCategoryId,
-      orElse: () => Category(id: 0, nome: 'Desconhecida', tipo: ''),
+      orElse: () =>
+          Category(id: 0, nome: 'Desconhecida', tipo: ''),
     );
 
     developer.log(
@@ -160,16 +165,12 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
       final transactionService = ref.read(TransactionServiceProvider);
-      
-      if (widget.isEditing && widget.transaction != null) {
-        // ATUALIZAÇÃO
 
+      if (widget.isEditing && widget.transaction != null) {
         await transactionService.updateTransaction(
           id: widget.transaction!.id,
           descricao: descricao,
@@ -189,7 +190,6 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
           );
         }
       } else {
-        // CRIAÇÃO
         await transactionService.addTransaction(
           descricao: descricao,
           tipo: _type,
@@ -198,7 +198,6 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
           categoriaId: _selectedCategoryId!,
           fixedTransaction: false,
         );
-
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -210,30 +209,21 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
         }
       }
 
-      if (mounted) {
-        // Retorna true para indicar que houve mudança
-        Navigator.of(context).pop(true);
-      }
-
+      if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao salvar: ${e.toString()}'),
+            content: Text('Erro ao salvar: $e'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 5),
           ),
         );
       }
-
     } finally {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
       }
-      
     }
   }
 
@@ -241,7 +231,6 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   Future<void> _deleteTransaction() async {
     if (widget.transaction == null) return;
 
-    // Confirmação
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -263,14 +252,11 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
 
     if (confirmed != true) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      final transactionService = ref.read(TransactionServiceProvider);
-      await transactionService.deleteTransaction(widget.transaction!.id);
-
+      final service = ref.read(TransactionServiceProvider);
+      await service.deleteTransaction(widget.transaction!.id);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -281,24 +267,14 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
         );
         Navigator.of(context).pop(true);
       }
-
     } catch (e) {
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao excluir: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Erro ao excluir: $e')),
         );
       }
-
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -324,15 +300,14 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     );
 
     if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-      
+      setState(() => _selectedDate = picked);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final primaryBlue = Theme.of(context).primaryColor;
+
     final Color typeColor = _type == TransactionType.receita
         ? const Color(0xFF2E7D32)
         : const Color(0xFFE53935);
@@ -344,8 +319,14 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(title,
-            style: TextStyle(color: typeColor, fontWeight: FontWeight.bold)),
+        automaticallyImplyLeading: false,
+        title: Text(
+          title,
+          style: TextStyle(
+            color: typeColor,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: IconThemeData(color: typeColor),
@@ -369,46 +350,56 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                   const SizedBox(height: 20),
                   _buildDateField(typeColor),
                   const SizedBox(height: 40),
-                  _buildActionButton(typeColor,
-                      widget.isEditing ? 'Salvar Alterações' : 'Registrar'),
+                  _buildActionButton(
+                      typeColor,
+                      widget.isEditing
+                          ? 'Salvar Alterações'
+                          : 'Registrar'),
                   if (widget.isEditing) _buildDeleteButton(),
                   const SizedBox(height: 20),
                 ],
               ),
             ),
           ),
-          
-          // Loading overlay
+
           if (_isLoading)
             Container(
               color: Colors.black.withOpacity(0.3),
               child: const Center(
-                child: CircularProgressIndicator(color: Colors.white),
+                child:
+                    CircularProgressIndicator(color: Colors.white),
               ),
             ),
         ],
       ),
+      bottomNavigationBar: BottomNavMenu(
+        currentIndex: -1, 
+        primaryColor: primaryBlue,
+      ),
     );
   }
 
-  // --- WIDGETS AUXILIARES DE FORMULÁRIO ---
+  // Widgets auxiliares
 
   Widget _buildTypeSwapButton(Color typeColor) {
     final bool isReceita = _type == TransactionType.receita;
 
     return TextButton.icon(
-      icon: Icon(isReceita ? Icons.arrow_downward : Icons.arrow_upward,
-          color: typeColor, size: 18),
+      icon: Icon(
+          isReceita ? Icons.arrow_downward : Icons.arrow_upward,
+          color: typeColor,
+          size: 18),
       label: Text(
         isReceita ? 'Despesa' : 'Receita',
         style: TextStyle(color: typeColor, fontSize: 12),
       ),
       onPressed: () {
         setState(() {
-          _type = isReceita ? TransactionType.despesa : TransactionType.receita;
-          _selectedCategoryId = null; // Reseta a categoria
+          _type = isReceita
+              ? TransactionType.despesa
+              : TransactionType.receita;
+          _selectedCategoryId = null;
         });
-        
       },
     );
   }
@@ -416,17 +407,21 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   Widget _buildValueField(Color color) {
     return TextFormField(
       controller: _valueController,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      keyboardType:
+          const TextInputType.numberWithOptions(decimal: true),
       onChanged: (value) {
-        final cleanValue = value.replaceAll(RegExp(r'[^\d]'), '');
+        final cleanValue =
+            value.replaceAll(RegExp(r'[^\d]'), '');
         if (cleanValue.isNotEmpty) {
           final number = int.parse(cleanValue);
-          final formatter = NumberFormat.currency(locale: 'pt_BR', symbol: '');
+          final formatter =
+              NumberFormat.currency(locale: 'pt_BR', symbol: '');
           final formatted = formatter.format(number / 100);
 
           _valueController.value = TextEditingValue(
             text: formatted.trim(),
-            selection: TextSelection.collapsed(offset: formatted.trim().length),
+            selection: TextSelection.collapsed(
+                offset: formatted.trim().length),
           );
         }
       },
@@ -435,10 +430,12 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
         prefixText: 'R\$ ',
         prefixStyle: TextStyle(color: color, fontSize: 18),
         border: const OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10))),
+            borderRadius:
+                BorderRadius.all(Radius.circular(10))),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: color, width: 2),
+          borderSide:
+              BorderSide(color: color, width: 2),
         ),
       ),
       validator: (value) {
@@ -458,12 +455,15 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     return DropdownButtonFormField<int>(
       decoration: InputDecoration(
         labelText: 'Categoria',
-        prefixIcon: Icon(Icons.category_outlined, color: typeColor),
+        prefixIcon:
+            Icon(Icons.category_outlined, color: typeColor),
         border: const OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10))),
+            borderRadius:
+                BorderRadius.all(Radius.circular(10))),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: typeColor, width: 2),
+          borderSide:
+              BorderSide(color: typeColor, width: 2),
         ),
       ),
       initialValue: _selectedCategoryId,
@@ -478,12 +478,6 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
         setState(() {
           _selectedCategoryId = newValue;
         });
-        
-        final categoria = _allCategories.firstWhere(
-          (cat) => cat.id == newValue,
-          orElse: () => Category(id: 0, nome: 'Desconhecida', tipo: ''),
-        );
-        
       },
       validator: (value) {
         if (value == null) return 'Selecione a categoria.';
@@ -498,12 +492,15 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
       maxLength: 100,
       decoration: InputDecoration(
         labelText: 'Descrição (Opcional)',
-        prefixIcon: Icon(Icons.description_outlined, color: color),
+        prefixIcon:
+            Icon(Icons.description_outlined, color: color),
         border: const OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10))),
+            borderRadius:
+                BorderRadius.all(Radius.circular(10))),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: color, width: 2),
+          borderSide:
+              BorderSide(color: color, width: 2),
         ),
       ),
     );
@@ -517,12 +514,15 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
       decoration: InputDecoration(
         labelText: 'Data',
         hintText: formatter.format(_selectedDate),
-        prefixIcon: Icon(Icons.calendar_today, color: color),
+        prefixIcon:
+            Icon(Icons.calendar_today, color: color),
         border: const OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10))),
+            borderRadius:
+                BorderRadius.all(Radius.circular(10))),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: color, width: 2),
+          borderSide:
+              BorderSide(color: color, width: 2),
         ),
       ),
       onTap: () => _selectDate(context),
@@ -537,12 +537,15 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 15),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          disabledBackgroundColor: color.withOpacity(0.5),
+          padding:
+              const EdgeInsets.symmetric(vertical: 15),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10)),
+          disabledBackgroundColor:
+              color.withOpacity(0.5),
         ),
-        child: Text(text, style: const TextStyle(fontSize: 18)),
+        child: Text(text,
+            style: const TextStyle(fontSize: 18)),
       ),
     );
   }
@@ -551,9 +554,12 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     return Padding(
       padding: const EdgeInsets.only(top: 20.0),
       child: TextButton(
-        onPressed: _isLoading ? null : _deleteTransaction,
+        onPressed:
+            _isLoading ? null : _deleteTransaction,
         child: const Text('Excluir Transação',
-            style: TextStyle(color: Color(0xFFE53935), fontSize: 16)),
+            style: TextStyle(
+                color: Color(0xFFE53935),
+                fontSize: 16)),
       ),
     );
   }

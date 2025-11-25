@@ -46,16 +46,34 @@ class BottomNavMenu extends StatelessWidget {
             },
           ),
 
+<<<<<<< Updated upstream
           const SizedBox(width: 40), // Espaço para o FAB
+=======
+          // 3. BOTÃO DE AÇÃO (ADICIONAR TRANSAÇÃO)
+          FloatingActionButton(
+            onPressed: () async {
+              await Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const TransactionFormScreen(
+                    initialType: TransactionType.despesa,
+                  ),
+                ),
+              );
+              onTransactionAdded?.call();
+            },
+            backgroundColor: primaryColor,
+            child: const Icon(Icons.add, color: Colors.white),
+          ),
+>>>>>>> Stashed changes
 
           // 3. METAS
           IconButton(
             icon: Icon(
               Icons.track_changes,
-              color: currentIndex == 2 ? primaryColor : Colors.grey,
+              color: currentIndex == 3 ? primaryColor : Colors.grey,
             ),
             onPressed: () {
-              if (currentIndex != 2) {
+              if (currentIndex != 3) {
                 context.go('/goals');
               }
             },
@@ -65,10 +83,10 @@ class BottomNavMenu extends StatelessWidget {
           IconButton(
             icon: Icon(
               Icons.person,
-              color: currentIndex == 3 ? primaryColor : Colors.grey,
+              color: currentIndex == 4 ? primaryColor : Colors.grey,
             ),
             onPressed: () {
-              if (currentIndex != 3) {
+              if (currentIndex != 4) {
                 context.go('/profile');
               }
             },
